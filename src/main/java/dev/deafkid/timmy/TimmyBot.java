@@ -1,5 +1,18 @@
 package dev.deafkid.timmy;
 
+import dev.deafkid.timmy.util.ReflectionHelper;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Set;
+import javax.security.auth.login.LoginException;
+import lombok.Getter;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,21 +32,57 @@ import org.slf4j.LoggerFactory;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+@Getter
 public class TimmyBot {
 
+    @Getter
     private static TimmyBot instance;
-    private static Logger logger = LoggerFactory.getLogger(TimmyBot.class);
+    @Getter
+    private static final Logger logger = LoggerFactory.getLogger(TimmyBot.class);
+    private Settings settings;
+    private JDA api;
 
     public static void main(String[] args) {
         if (System.getProperty("file.encoding").equalsIgnoreCase("UTF-8")) {
             (instance = new TimmyBot()).load();
         } else {
-            logger.error("Unable to start TimmyBot... The program is not running in UTF-8!");
+            logger.error("Unable to start the Timmy bot... The program is not running in UTF-8!");
             System.exit(-1);
         }
     }
 
     private void load() {
-        //
+        try {
+            settings = new Settings();
+            settings.load();
+
+            JDABuilder builder = JDABuilder.createDefault(settings.getToken());
+            builder.enableIntents(Arrays.asList(GatewayIntent.values()));
+            builder.setChunkingFilter(ChunkingFilter.ALL);
+            builder.setMemberCachePolicy(MemberCachePolicy.ALL);
+
+            Set<Class<? extends ListenerAdapter>> listeners = ReflectionHelper.getClassesBySubType("dev.deafkid.timmy.listener",
+                ListenerAdapter.class);
+            listeners.forEach(c -> {
+                try {
+                    builder.addEventListeners(c.getConstructor().newInstance());
+                } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+                    logger.error("Something went wrong while trying to register " + c.getSimpleName() + " as a listener", ex);
+                }
+            });
+
+            builder.setBulkDeleteSplittingEnabled(false);
+            builder.setActivity(Activity.watching("Married at First Sight"));
+
+            api = builder.build().awaitReady();
+            api.upsertCommand("ping", "Pong").complete();
+        } catch (LoginException ex) {
+            logger.error(
+                "Unable to start the Timmy bot with the current token. Please check the token and try again. If the issue is persistent, please check the Discord status.",
+                ex);
+        } catch (InterruptedException ex) {
+            logger.error("Something went wrong while starting the Timmy bot, please check the following error.", ex);
+        }
     }
 }

@@ -14,8 +14,9 @@ repositories {
 dependencies {
     implementation 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
-    implementation 'net.dv8tion:JDA:v5.0.0-alpha.12'
+    implementation 'net.dv8tion:JDA:5.0.0-alpha.12'
     implementation 'ch.qos.logback:logback-classic:1.2.11'
+    implementation 'com.google.guava:guava:31.1-jre'
 }
 
 shadowJar {
