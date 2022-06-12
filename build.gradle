@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+group 'dev.deafkid'
+version '0.1'
+description 'Timmy. An advanced Discord bot.'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    implementation 'net.dv8tion:JDA:v5.0.0-alpha.12'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
+}
+
+shadowJar {
+    archiveBaseName.set('Timmy')
+    archiveClassifier.set('dev.deafkid.timmy.TimmyBot')
+    archiveVersion.set(project.version.toString())
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+
