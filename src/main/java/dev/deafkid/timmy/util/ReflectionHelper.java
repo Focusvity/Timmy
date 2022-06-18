@@ -29,7 +29,6 @@ import java.util.Set;
 
 public class ReflectionHelper {
 
-    @SuppressWarnings("UnstableApiUsage")
     public static Set<Class<?>> getClassesFrom(String packageName) {
         Set<Class<?>> classes = new HashSet<>();
         try {

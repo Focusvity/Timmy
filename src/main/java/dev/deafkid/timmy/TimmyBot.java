@@ -1,5 +1,7 @@
 package dev.deafkid.timmy;
 
+import dev.deafkid.timmy.command.Command;
+import dev.deafkid.timmy.command.SubCommand;
 import dev.deafkid.timmy.util.ReflectionHelper;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -68,15 +70,22 @@ public class TimmyBot {
                 try {
                     builder.addEventListeners(c.getConstructor().newInstance());
                 } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-                    logger.error("Something went wrong while trying to register " + c.getSimpleName() + " as a listener", ex);
+                    logger.error(String.format("Something went wrong while trying to register %s as a listener", c.getSimpleName()), ex);
                 }
             });
+
+            // Subcommands must load first, so we can assign them to commands afterwards
+            SubCommand.fetchSubCommands();
+            Command.fetchCommands();
 
             builder.setBulkDeleteSplittingEnabled(false);
             builder.setActivity(Activity.watching("Married at First Sight"));
 
-            api = builder.build().awaitReady();
-            api.upsertCommand("ping", "Pong").complete();
+            api = builder.build();
+
+            api.upsertCommand("ping", "Pong").queue();
+
+            api.awaitReady();
         } catch (LoginException ex) {
             logger.error(
                 "Unable to start the Timmy bot with the current token. Please check the token and try again. If the issue is persistent, please check the Discord status.",
