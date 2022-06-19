@@ -37,7 +37,8 @@ public class Settings {
             if (!file.exists()) { // TODO: Copy file from resources
                 TimmyBot.getLogger().info("Cannot find the settings file, creating a new one!");
                 file.createNewFile();
-                TimmyBot.getLogger().info("The settings file has been created. Please edit the details accordingly and restart the program!");
+                TimmyBot.getLogger().info(
+                    "The settings file has been created. Please edit the details accordingly and restart the program!");
             }
 
             // Code from Plex - START

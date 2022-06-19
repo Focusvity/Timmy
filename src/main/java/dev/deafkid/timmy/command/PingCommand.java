@@ -17,7 +17,10 @@ package dev.deafkid.timmy.command;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import java.util.Collections;
+import java.util.List;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 @CommandInfo(description = "Pong!")
 public class PingCommand extends Command {
@@ -28,5 +31,10 @@ public class PingCommand extends Command {
         event.reply("Pong!").setEphemeral(true).flatMap(v ->
             event.getHook().editOriginalFormat("Pong: %d ms", System.currentTimeMillis() - initial)
         ).queue();
+    }
+
+    @Override
+    public List<OptionData> getOptionData() {
+        return Collections.emptyList();
     }
 }

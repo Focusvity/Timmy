@@ -17,13 +17,33 @@ package dev.deafkid.timmy.command;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import java.util.Arrays;
+import java.util.List;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
-@SubCommandInfo(command = CommandExample.class, description = "SubCommand Example")
-public class SubCommandExample extends SubCommand {
+@CommandInfo(description = "Test command")
+public class TestCommand extends Command {
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        //
+        if (event.getOption("test") != null) {
+            event.reply(event.getOption("test").getAsString()).queue();
+            return;
+        }
+
+        if (event.getOption("user") != null) {
+            event.reply("User functional").queue();
+            return;
+        }
+
+        event.reply("Yes, this is working").queue();
+    }
+
+    @Override
+    public List<OptionData> getOptionData() {
+        return Arrays.asList(new OptionData(OptionType.STRING, "test", "Test subcommand"),
+            new OptionData(OptionType.USER, "user", "User subcommand"));
     }
 }

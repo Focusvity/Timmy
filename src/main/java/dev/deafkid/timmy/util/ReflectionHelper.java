@@ -39,22 +39,26 @@ public class ReflectionHelper {
                     Class<?> clazz = Class.forName(info.getName());
                     classes.add(clazz);
                 } catch (ClassNotFoundException ex) {
-                    TimmyBot.getLogger().error(String.format("Unable to find %s in %s", info.getName(), packageName));
+                    TimmyBot.getLogger().error(
+                        String.format("Unable to find %s in %s", info.getName(), packageName));
                 }
             });
         } catch (IOException ex) {
-            TimmyBot.getLogger().error("Something went wrong while fetching classes from " + packageName);
+            TimmyBot.getLogger()
+                .error("Something went wrong while fetching classes from " + packageName);
             throw new RuntimeException(ex);
         }
         return Collections.unmodifiableSet(classes);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Set<Class<? extends T>> getClassesBySubType(String packageName, Class<T> subType) {
+    public static <T> Set<Class<? extends T>> getClassesBySubType(String packageName,
+        Class<T> subType) {
         Set<Class<?>> unfilteredClasses = getClassesFrom(packageName);
         Set<Class<? extends T>> filteredClasses = new HashSet<>();
         unfilteredClasses.forEach(clazz -> {
-            if (clazz.getSuperclass() == subType || Arrays.asList(clazz.getInterfaces()).contains(subType)) {
+            if (clazz.getSuperclass() == subType || Arrays.asList(clazz.getInterfaces())
+                .contains(subType)) {
                 filteredClasses.add((Class<? extends T>) clazz);
             }
         });

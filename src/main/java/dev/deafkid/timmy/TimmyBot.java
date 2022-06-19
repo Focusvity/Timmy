@@ -1,7 +1,6 @@
 package dev.deafkid.timmy;
 
 import dev.deafkid.timmy.command.Command;
-import dev.deafkid.timmy.command.SubCommand;
 import dev.deafkid.timmy.util.ReflectionHelper;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -39,9 +38,9 @@ import org.slf4j.LoggerFactory;
 public class TimmyBot {
 
     @Getter
-    private static TimmyBot instance;
-    @Getter
     private static final Logger logger = LoggerFactory.getLogger(TimmyBot.class);
+    @Getter
+    private static TimmyBot instance;
     private Settings settings;
     private JDA api;
 
@@ -64,17 +63,19 @@ public class TimmyBot {
             builder.setChunkingFilter(ChunkingFilter.ALL);
             builder.setMemberCachePolicy(MemberCachePolicy.ALL);
 
-            // Subcommands must load first, so we can assign them to commands afterwards
-            SubCommand.fetchSubCommands();
             Command.fetchCommands();
 
-            Set<Class<? extends ListenerAdapter>> listeners = ReflectionHelper.getClassesBySubType("dev.deafkid.timmy.listener",
+            Set<Class<? extends ListenerAdapter>> listeners = ReflectionHelper.getClassesBySubType(
+                "dev.deafkid.timmy.listener",
                 ListenerAdapter.class);
             listeners.forEach(c -> {
                 try {
                     builder.addEventListeners(c.getConstructor().newInstance());
-                } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-                    logger.error(String.format("Something went wrong while trying to register %s as a listener", c.getSimpleName()), ex);
+                } catch (InstantiationException | NoSuchMethodException | IllegalAccessException |
+                         InvocationTargetException ex) {
+                    logger.error(String.format(
+                        "Something went wrong while trying to register %s as a listener",
+                        c.getSimpleName()), ex);
                 }
             });
 
@@ -84,7 +85,9 @@ public class TimmyBot {
             api = builder.build();
 
             Command.getCommands().forEach(command -> {
-                api.upsertCommand(command.getName(), command.getDescription()).queue();
+                api.upsertCommand(command.getName(), command.getDescription())
+                    .addOptions(command.getOptionData())
+                    .queue();
             });
 
             api.awaitReady();
@@ -93,7 +96,9 @@ public class TimmyBot {
                 "Unable to start the Timmy bot with the current token. Please check the token and try again. If the issue is persistent, please check the Discord status.",
                 ex);
         } catch (InterruptedException ex) {
-            logger.error("Something went wrong while starting the Timmy bot, please check the following error.", ex);
+            logger.error(
+                "Something went wrong while starting the Timmy bot, please check the following error.",
+                ex);
         }
     }
 }

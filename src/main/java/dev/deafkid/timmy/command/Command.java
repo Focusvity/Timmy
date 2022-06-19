@@ -23,11 +23,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 @Getter
 public abstract class Command {
@@ -37,7 +39,6 @@ public abstract class Command {
     private final String name;
     private final String description;
     private final boolean isDevCommand;
-    private final Map<String, SubCommand> subCommands;
 
     private SlashCommandInteractionEvent event;
     private Member sender;
@@ -45,41 +46,32 @@ public abstract class Command {
     public Command() {
         CommandInfo info = getClass().getAnnotation(CommandInfo.class);
         if (info == null) {
-            throw new NullPointerException("Missing CommandInfo class for " + getClass().getSimpleName());
+            throw new NullPointerException(
+                "Missing CommandInfo class for " + getClass().getSimpleName());
         }
 
-        this.name = getClass().getSimpleName().replace("Command", "");
+        this.name = getClass().getSimpleName().replace("Command", "").toLowerCase();
         this.description = info.description();
         this.isDevCommand = info.isDevCmd();
-        this.subCommands = new HashMap<>();
-        assignSubCommands();
     }
 
     public static void fetchCommands() {
-        Set<Class<? extends Command>> classes = ReflectionHelper.getClassesBySubType("dev.deafkid.timmy.command", Command.class);
+        Set<Class<? extends Command>> classes = ReflectionHelper.getClassesBySubType(
+            "dev.deafkid.timmy.command", Command.class);
         classes.forEach(c -> {
             try {
                 commands.add(c.getConstructor().newInstance());
             } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-                TimmyBot.getLogger().error(String.format("Something went wrong while trying to register %s as a command", c.getSimpleName()), ex);
+                TimmyBot.getLogger().error(
+                    String.format("Something went wrong while trying to register %s as a command",
+                        c.getSimpleName()), ex);
             }
         });
     }
 
-    public void assignSubCommands() {
-        SubCommand remove = null;
-        for (SubCommand subCommand : SubCommand.getSubcommands()) {
-            if (subCommand.getParentCommand() == getClass()) {
-                subCommands.put(subCommand.getName(), subCommand);
-                remove = subCommand;
-                break;
-            }
-        }
-        SubCommand finalRemove = remove;
-        SubCommand.getSubcommands().removeIf(p -> finalRemove != null && p == finalRemove);
-    }
-
     public abstract void run(SlashCommandInteractionEvent event);
+
+    public abstract List<OptionData> getOptionData();
 
     public final void execute(SlashCommandInteractionEvent event) {
         this.event = event;
@@ -91,22 +83,18 @@ public abstract class Command {
             return;
         }
 
-        if (isDevCommand && !TimmyBot.getInstance().getSettings().getDevelopers().contains(sender.getId())) {
-            event.reply("Only the bot developers can execute this command!").setEphemeral(true).queue();
-            return;
-        }
-
-        if (subCommands.size() > 0 && args.length > 1) {
-            if (subCommands.containsKey(args[1])) {
-                subCommands.get(args[1]).execute(event);
-            }
+        if (isDevCommand && !TimmyBot.getInstance().getSettings().getDevelopers()
+            .contains(sender.getId())) {
+            event.reply("Only the bot developers can execute this command!").setEphemeral(true)
+                .queue();
             return;
         }
 
         try {
             run(event);
         } catch (Exception ex) {
-            TimmyBot.getLogger().error("Something went wrong while trying to execute command " + name, ex);
+            TimmyBot.getLogger()
+                .error("Something went wrong while trying to execute command " + name, ex);
         }
     }
 }
