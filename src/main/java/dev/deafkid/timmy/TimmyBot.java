@@ -64,6 +64,10 @@ public class TimmyBot {
             builder.setChunkingFilter(ChunkingFilter.ALL);
             builder.setMemberCachePolicy(MemberCachePolicy.ALL);
 
+            // Subcommands must load first, so we can assign them to commands afterwards
+            SubCommand.fetchSubCommands();
+            Command.fetchCommands();
+
             Set<Class<? extends ListenerAdapter>> listeners = ReflectionHelper.getClassesBySubType("dev.deafkid.timmy.listener",
                 ListenerAdapter.class);
             listeners.forEach(c -> {
@@ -74,16 +78,14 @@ public class TimmyBot {
                 }
             });
 
-            // Subcommands must load first, so we can assign them to commands afterwards
-            SubCommand.fetchSubCommands();
-            Command.fetchCommands();
-
             builder.setBulkDeleteSplittingEnabled(false);
             builder.setActivity(Activity.watching("Married at First Sight"));
 
             api = builder.build();
 
-            api.upsertCommand("ping", "Pong").queue();
+            Command.getCommands().forEach(command -> {
+                api.upsertCommand(command.getName(), command.getDescription()).queue();
+            });
 
             api.awaitReady();
         } catch (LoginException ex) {

@@ -17,11 +17,13 @@ package dev.deafkid.timmy.command;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
 @CommandInfo(description = "Example command class")
 public class CommandExample extends Command {
 
     @Override
-    public void run() {
+    public void run(SlashCommandInteractionEvent event) {
         //
     }
 }

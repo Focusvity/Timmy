@@ -1,8 +1,4 @@
-package dev.deafkid.timmy.listener;
-
-import dev.deafkid.timmy.command.Command;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
+package dev.deafkid.timmy.command;
 
 /*
  * Copyright (C) 2022  Nathan Curran
@@ -21,14 +17,16 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-public class SlashListener extends ListenerAdapter {
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+@CommandInfo(description = "Pong!")
+public class PingCommand extends Command {
 
     @Override
-    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        Command.getCommands().forEach(command -> {
-            if (event.getName().equalsIgnoreCase(command.getName())) {
-                command.execute(event);
-            }
-        });
+    public void run(SlashCommandInteractionEvent event) {
+        long initial = System.currentTimeMillis();
+        event.reply("Pong!").setEphemeral(true).flatMap(v ->
+            event.getHook().editOriginalFormat("Pong: %d ms", System.currentTimeMillis() - initial)
+        ).queue();
     }
 }

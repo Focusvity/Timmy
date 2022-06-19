@@ -3,6 +3,8 @@ package dev.deafkid.timmy;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import lombok.Getter;
 
@@ -28,6 +30,7 @@ public class Settings {
 
     private final File file = new File("settings.properties");
     private String token;
+    private List<String> developers;
 
     public void load() {
         try {
@@ -46,6 +49,7 @@ public class Settings {
             // Code from Plex - END
 
             token = properties.getProperty("botToken", "empty");
+            developers = Arrays.asList(properties.getProperty("developers", "empty").split(","));
         } catch (Exception ignored) {
         }
     }

@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.Getter;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 @Getter
 public abstract class SubCommand {
@@ -33,6 +35,9 @@ public abstract class SubCommand {
     private final String name;
     private final String description;
     private final Class<? extends Command> parentCommand;
+    private SlashCommandInteractionEvent event;
+    private Member sender;
+    private String[] args;
 
     public SubCommand() {
         SubCommandInfo info = getClass().getAnnotation(SubCommandInfo.class);
@@ -56,5 +61,21 @@ public abstract class SubCommand {
         });
     }
 
-    public abstract void run();
+    public String getArg(int index) {
+        return args[index+2];
+    }
+
+    public abstract void run(SlashCommandInteractionEvent event);
+
+    public final void execute(SlashCommandInteractionEvent event) {
+        this.event = event;
+        this.sender = event.getMember();
+        this.args = event.getCommandString().split(" "); // args starts from 2
+
+        try {
+            run(event);
+        } catch (Exception ex) {
+            TimmyBot.getLogger().error("Something went wrong while trying to execute subcommand " + name, ex);
+        }
+    }
 }

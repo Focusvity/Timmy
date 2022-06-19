@@ -21,9 +21,13 @@ import dev.deafkid.timmy.TimmyBot;
 import dev.deafkid.timmy.util.ReflectionHelper;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 @Getter
 public abstract class Command {
@@ -32,7 +36,11 @@ public abstract class Command {
     private static final List<Command> commands = new ArrayList<>();
     private final String name;
     private final String description;
-    private final List<SubCommand> subCommands;
+    private final boolean isDevCommand;
+    private final Map<String, SubCommand> subCommands;
+
+    private SlashCommandInteractionEvent event;
+    private Member sender;
 
     public Command() {
         CommandInfo info = getClass().getAnnotation(CommandInfo.class);
@@ -42,7 +50,8 @@ public abstract class Command {
 
         this.name = getClass().getSimpleName().replace("Command", "");
         this.description = info.description();
-        this.subCommands = new ArrayList<>();
+        this.isDevCommand = info.isDevCmd();
+        this.subCommands = new HashMap<>();
         assignSubCommands();
     }
 
@@ -61,7 +70,7 @@ public abstract class Command {
         SubCommand remove = null;
         for (SubCommand subCommand : SubCommand.getSubcommands()) {
             if (subCommand.getParentCommand() == getClass()) {
-                subCommands.add(subCommand);
+                subCommands.put(subCommand.getName(), subCommand);
                 remove = subCommand;
                 break;
             }
@@ -70,5 +79,34 @@ public abstract class Command {
         SubCommand.getSubcommands().removeIf(p -> finalRemove != null && p == finalRemove);
     }
 
-    public abstract void run();
+    public abstract void run(SlashCommandInteractionEvent event);
+
+    public final void execute(SlashCommandInteractionEvent event) {
+        this.event = event;
+        this.sender = event.getMember();
+        String[] args = event.getCommandString().split(" ");
+
+        // Never respond to bots
+        if (event.getUser().isBot()) {
+            return;
+        }
+
+        if (isDevCommand && !TimmyBot.getInstance().getSettings().getDevelopers().contains(sender.getId())) {
+            event.reply("Only the bot developers can execute this command!").setEphemeral(true).queue();
+            return;
+        }
+
+        if (subCommands.size() > 0 && args.length > 1) {
+            if (subCommands.containsKey(args[1])) {
+                subCommands.get(args[1]).execute(event);
+            }
+            return;
+        }
+
+        try {
+            run(event);
+        } catch (Exception ex) {
+            TimmyBot.getLogger().error("Something went wrong while trying to execute command " + name, ex);
+        }
+    }
 }
